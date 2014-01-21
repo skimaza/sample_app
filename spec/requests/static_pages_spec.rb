@@ -23,14 +23,56 @@ describe "StaticPages" do
       let(:user) { FactoryGirl.create(:user) }
       before do
         FactoryGirl.create(:micropost, user: user, content: "Lorem ipsum")
-        FactoryGirl.create(:micropost, user: user, content: "Dolor sit amet")
+        # FactoryGirl.create(:micropost, user: user, content: "Dolor sit amet")
         sign_in user
         visit root_path
       end
 
-      it "should render the user's feed" do
-        user.feed.each do |item|
-          page.should have_selector("li##{item.id}", text: item.content)
+      describe "for single micropost" do
+
+        it "should render singular form of micropost" do
+          page.should have_selector('span', text: "micropost")
+        end
+      end
+
+      describe "for multiple microposts" do
+        before do
+          FactoryGirl.create(:micropost, user: user, content: "Dolor sit amet")
+          visit root_path
+        end
+
+        it "should render the user's feed" do
+          #expect(user.feed.count).to eq(2)
+          user.feed.each do |item|
+            page.should have_selector("li##{item.id}", text: item.content)
+          end
+        end
+      
+      # it "should render the user's feed" do
+      #   user.feed.each do |item|
+      #     page.should have_selector("li##{item.id}", text: item.content)
+      #   end
+      # end
+
+        describe "for many microposts spanning 2 pages" do
+          before do
+            28.times do |n|
+              FactoryGirl.create(:micropost, user: user, content: (n+3).to_s)
+            end
+            visit root_path
+          end
+
+          it "should render the first page correctly" do
+            user.feed.paginate(page: 1).each do |item|
+              page.should have_selector("li##{item.id}", content: item.content)
+            end
+          end
+
+          it "should render the second page correctly" do
+            user.feed.paginate(page: 2).each do |item|
+              page.should have_selector("li##{item.id}", content: item.content)
+            end
+          end
         end
       end
     end
