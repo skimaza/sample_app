@@ -22,7 +22,7 @@ describe "StaticPages" do
     describe "for signed-in users" do
       let(:user) { FactoryGirl.create(:user) }
       before do
-        FactoryGirl.create(:micropost, user: user, content: "Lorem ipsum")
+        FactoryGirl.create(:micropost, user: user, content: "Lorem")
         # FactoryGirl.create(:micropost, user: user, content: "Dolor sit amet")
         sign_in user
         visit root_path
@@ -37,7 +37,7 @@ describe "StaticPages" do
 
       describe "for multiple microposts" do
         before do
-          FactoryGirl.create(:micropost, user: user, content: "Dolor sit amet")
+          FactoryGirl.create(:micropost, user: user, content: "Ipsum")
           visit root_path
         end
 
@@ -53,6 +53,17 @@ describe "StaticPages" do
       #     page.should have_selector("li##{item.id}", text: item.content)
       #   end
       # end
+
+        describe "follower/following counts" do
+          let(:other_user) { FactoryGirl.create(:user) }
+          before do
+            other_user.follow!(user)
+            visit root_path
+          end
+
+          it { should have_link("0 following", href: following_user_path(user)) }
+          it { should have_link("1 followers", href: followers_user_path(user)) }
+        end
 
         describe "for many microposts spanning 2 pages" do
           before do
